@@ -1,0 +1,27 @@
+##Getopt
+getopt es un módulo de Python inspirado en C que permite procesar argumentos de línea de comandos.
+
+Usos principales:
+✅ Procesar opciones cortas (-n) y largas (--nombre).
+✅ Definir argumentos con valores (-e 21 o --edad=21).
+✅ Manejo manual de errores.
+
+Diferencias:
+Basico, pero requiere manejo manual de errores
+Es menos intuitivo
+Se recomienda para scripts pequenos
+
+##Argparse
+argparse es un módulo más flexible y potente que reemplaza a getopt, con mejor manejo de errores y opciones avanzadas.
+
+Usos principales:
+✅ Argumentos obligatorios y opcionales.
+✅ Manejo de tipos (int, float, bool, listas).
+✅ Mensajes de ayuda automáticos con --help.
+✅ Validación automática de errores.
+
+Diferencias:
+Es mas facil de usar y maneja errores automaticamente
+Hace validacion automatica
+genera --help automáticamente
+Se usa para scripts más grandes o complejos

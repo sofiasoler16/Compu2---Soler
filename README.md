@@ -2,6 +2,6 @@
 
 ## Información Personal
 - **Nombre:** Sofía
-- **Intereses en la programación:** (Ejemplo: Desarrollo web, Inteligencia Artificial, etc.)
-- **Expectativas sobre la materia:** (Ejemplo: Aprender Git, mejorar en Unix/Linux, etc.)
-- **Hobbies:** (Ejemplo: Leer, programar, jugar ajedrez, etc.)
+- **Intereses en la programación:** Desarrollo de paginas y aplicaciones web y desarrollo con Inteligencia Artificial
+- **Expectativas sobre la materia:** Aprender las bases para poder desarrollar aplicaciones web
+- **Hobbies:** Leer, ver series y jugar en la pc

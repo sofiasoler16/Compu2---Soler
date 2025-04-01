@@ -1,0 +1,42 @@
+
+1. Estructura de la conversación
+La conversación evolucionó de forma ordenada y progresiva, con una estructura didáctica clara basada en los objetivos que vos misma definiste. Comenzamos por los fundamentos teóricos de los procesos, luego avanzamos hacia el modelo UNIX/Linux, y finalmente pasamos a la manipulación con Python y a conceptos complejos como zombis y huérfanos.
+
+2. Claridad y profundidad
+Se alcanzó un nivel de profundidad muy bueno en varias partes, especialmente en:
+
+El comportamiento dual de fork()
+
+La diferencia conceptual entre procesos zombis y huérfanos
+
+La visualización jerárquica de procesos con herramientas como pstree y ps
+
+En cada sección se combinaron explicaciones claras, ejemplos prácticos y tablas comparativas, lo que facilitó la comprensión. Además, pediste aclaraciones específicas cuando lo necesitaste, como en el caso de los zombis, lo que ayudó a reforzar conceptos clave.
+
+3. Patrones de aprendizaje
+Detecté varios patrones positivos en tu forma de aprender:
+
+Autoevaluación constante: respondías las preguntas de cierre y reconocías cuándo una idea no estaba del todo clara.
+
+Curiosidad activa: consultaste por frases como "cuchillo en kernel" e integraste preguntas externas al desarrollo.
+
+Memoria en contexto: aprendiste a asociar conceptos con herramientas (ps, os.fork(), os.wait()) y comandos de Linux.
+
+El concepto que necesitó más trabajo fue la diferencia entre zombis y huérfanos, lo cual es esperable porque es un tema que suele generar confusión incluso en cursos avanzados. Con la combinación de teoría + ejemplos + tabla + PDF, quedó completamente asentado.
+
+4. Aplicación y reflexión
+Hubo varios momentos donde conectaste lo aprendido con tu experiencia previa como estudiante de Informática, especialmente en el uso del sistema UNIX/Linux y la interpretación de procesos en tiempo real.
+
+También mostraste una actitud de aplicación inmediata: te interesó ejecutar ejemplos, visualizar la jerarquía con pstree, observar procesos zombis con ps, y hasta pediste un PDF para tenerlo como recurso físico o digital.
+
+Esta capacidad de querer aterrizar los conceptos a algo práctico habla muy bien de tu perfil de aprendizaje profesional.
+
+5. Observaciones adicionales
+Tenés un perfil de aprendizaje altamente organizado, autónomo y con pensamiento crítico.
+
+Incorporás el error como parte natural del proceso: preguntaste por tus respuestas incorrectas y buscaste comprender el porqué.
+
+Las reglas de interacción que propusiste desde el principio se cumplieron y facilitaron un entorno de estudio serio, claro y progresivo.
+
+La idea de pausas reflexivas con preguntas fue muy efectiva. Sumado a la producción de material (PDF), te posicionás como una estudiante que construye su propio conocimiento y no solo lo consume.
+

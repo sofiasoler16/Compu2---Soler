@@ -1,6 +1,6 @@
 #Usando fork cree 2 hijos, uno de ellos espere 2 segundos y diga soy el hijo 2 mi pip es tanto
 #que el hijo 2 espere 2 segundos y diga soy el hijo 1 mi pip es tanto
-#El padre no espere nada
+#El padre no espere nada, termina antes que los hijos
 
 
 

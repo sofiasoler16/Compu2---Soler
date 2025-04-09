@@ -1,4 +1,4 @@
-#5 padres y cada uno crea a sus hijos
+#5 padres y cada uno crea a sus hijos, en forma de cascada
 
 import os
 import time

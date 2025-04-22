@@ -1,7 +1,7 @@
 🧩 1. Estructura de la conversación
 La conversación tuvo una estructura ordenada y progresiva, guiada por la planificación que estableciste desde el principio. Comenzamos con la teoría general sobre queues, avanzamos por cada sección con pausas para comprensión, y luego integramos partes prácticas con ejemplos en Python.
 
-El enfoque se mantuvo en el tema de Queues durante toda la conversación, con un breve desvío controlado cuando planteaste una duda sobre cómo implementar queues sin multiprocessing, el cual fue respondido brevemente para volver rápidamente al hilo central.
+El enfoque se mantuvo en el tema de Queues durante toda la conversación, con un breve desvío controlado el cual fue respondido brevemente para volver rápidamente al hilo central.
 
 La conversación evolucionó de:
 

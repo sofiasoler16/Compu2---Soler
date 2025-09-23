@@ -1,0 +1,41 @@
+version: "3.9"
+
+services:
+  server:
+    build: ./app
+    container_name: udp-server
+    command: ["python", "udp_server.py", "--mode", "echo", "--host", "0.0.0.0", "--port", "9007"]
+    ports:
+      - "9007:9007/udp"     # Cliente en el HOST -> server (UDP)
+    volumes:
+      - logs:/var/log/udp   # Volumen persistente de logs
+    networks:
+      - lab-net
+
+  server_now:
+    build: ./app
+    container_name: udp-server-now
+    command: ["python", "udp_server.py", "--mode", "now", "--host", "0.0.0.0", "--port", "9010"]
+    ports:
+      - "9010:9010/udp"
+    volumes:
+      - logs:/var/log/udp
+    networks:
+      - lab-net
+
+  client:
+    build: ./app
+    container_name: udp-client
+    # ejemplo de “ping” interno al server echo
+    command: ["python", "udp_client.py", "--server", "server", "--port", "9007", "--message", "hola desde contenedor"]
+    depends_on:
+      - server
+    networks:
+      - lab-net
+
+volumes:
+  logs:
+
+networks:
+  lab-net:
+    driver: bridge

@@ -1,0 +1,36 @@
+version: "3.9"
+
+services:
+  time-server:
+    build:
+      context: ./server
+    image: udp-time-server:latest
+    container_name: udp-time-server
+    ports:
+      - "9999:9999/udp"      # expone UDP al host
+    volumes:
+      - ./logs:/app/logs     # persistencia de logs
+    networks:
+      - time-net
+    restart: unless-stopped
+
+  time-client:
+    build:
+      context: ./client
+    image: udp-time-client:latest
+    container_name: udp-time-client
+    environment:
+      SERVER_HOST: time-server
+      SERVER_PORT: 9999
+      MESSAGE: "time"        # podés cambiarlo al vuelo
+      TIMEOUT: "2.0"
+    depends_on:
+      - time-server
+    networks:
+      - time-net
+    # Lo ejecutamos a demanda:
+    # docker compose run --rm time-client
+
+networks:
+  time-net:
+    driver: bridge

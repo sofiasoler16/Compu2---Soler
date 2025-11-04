@@ -11,11 +11,9 @@ class ProcessTCPRequestHandler(socketserver.BaseRequestHandler):
 
 class ForkedTCPServer(socketserver.ForkingMixIn, socketserver.TCPServer):
     allow_reuse_address = True  # liberar rápido el puerto al reiniciar
-    # opcional: limitar procesos hijos
-    # max_children = 64
 
 if __name__ == "__main__":
-    HOST, PORT = "0.0.0.0", 9999   # <<< clave para aceptar conexiones externas
+    HOST, PORT = "0.0.0.0", 9999  
     with ForkedTCPServer((HOST, PORT), ProcessTCPRequestHandler) as server:
         print(f"Servidor corriendo en {HOST}:{PORT}")
         try:

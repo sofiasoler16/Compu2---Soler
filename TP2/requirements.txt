@@ -5,3 +5,5 @@ Pillow
 selenium
 aiofiles
 requests
+pytest
+pytest-asyncio

@@ -1,9 +1,3 @@
-
-
-
-# ==============================
-# File: server_processing.py
-# ==============================
 import argparse
 import socket
 import socketserver
@@ -42,10 +36,17 @@ class ProcessingTCPHandler(socketserver.BaseRequestHandler):
                 pass
             return
 
+        task = (req or {}).get("task")
         url = (req or {}).get("url")
         options = (req or {}).get("options", {})
+
+        if task != "full_processing":
+            # devolver error explícito para tasks desconocidas
+            send_message_sync(sock, {"status": "error", "error": f"unknown_task:{task}"})
+            return
+
         if not url:
-            send_message_sync(sock, {"status": "error", "message": "missing_url"})
+            send_message_sync(sock, {"status": "error", "error": "missing_url"})
             return
 
         fut = self.executor.submit(process_request, url, options)

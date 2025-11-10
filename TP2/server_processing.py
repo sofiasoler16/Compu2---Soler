@@ -14,7 +14,7 @@ from concurrent.futures import ProcessPoolExecutor
 
 from common.protocol import (
     encode_message,
-    decode_message_async,  # para compatibilidad si usamos asyncio en algún test
+    decode_message_async, 
 )
 from common.protocol import decode_message_sync, send_message_sync
 
@@ -24,8 +24,8 @@ from processor.image_processor import build_thumbnails
 
 
 class ProcessingTCPHandler(socketserver.BaseRequestHandler):
-    # El handler NO hace trabajo pesado: solo recibe, delega al pool y responde
-    executor: ProcessPoolExecutor = None  # seteado desde el servidor
+    
+    executor: ProcessPoolExecutor = None  
 
     def handle(self):
         sock: socket.socket = self.request
@@ -48,7 +48,6 @@ class ProcessingTCPHandler(socketserver.BaseRequestHandler):
             send_message_sync(sock, {"status": "error", "message": "missing_url"})
             return
 
-        # Preparar ejecución en proceso separado
         fut = self.executor.submit(process_request, url, options)
         try:
             result = fut.result(timeout=60)  # seguridad en el handler

@@ -1,10 +1,8 @@
-# ==============================
-# File: server_scraping.py
-# ==============================
 import argparse
 import asyncio
 import json
 import os
+import uuid
 from datetime import datetime, timezone
 from urllib.parse import urlparse
 
@@ -15,7 +13,7 @@ from scraper.html_parser import parse_basic_structure
 from scraper.metadata_extractor import extract_meta_tags
 from common.serialization import b64_png, utc_timestamp
 from common.protocol import encode_message, decode_message_async
-
+from amigable import FriendlyIdRegistry
 # ------------------------------
 # Config y argumentos CLI
 # ------------------------------
@@ -27,13 +25,13 @@ def parse_args():
     )
     parser.add_argument("-i", "--ip", required=True, help="Dirección de escucha (IPv4/IPv6)")
     parser.add_argument("-p", "--port", type=int, required=True, help="Puerto de escucha")
-    parser.add_argument("-w", "--workers", type=int, default=4, help="Límite de concurrencia por dominio")
+    parser.add_argument("-w", "--workers", type=int, default=8, help="Límite de concurrencia por dominio")
     parser.add_argument("--proc-host", default=os.getenv("PROC_HOST", "127.0.0.1"), help="Host del servidor de procesamiento (B)")
 
     parser.add_argument("--proc-port", type=int, default=int(os.getenv("PROC_PORT", "9000")), help="Puerto del servidor de procesamiento (B)")
 
-    parser.add_argument("--proc-timeout", type=float, default=25.0, help="Timeout de solicitud a B (segundos)")
-    parser.add_argument("--request-timeout", type=float, default=30.0, help="Timeout por página (segundos)")
+    parser.add_argument("--proc-timeout", type=float, default=60.0, help="Timeout de solicitud a B (segundos)")
+    parser.add_argument("--request-timeout", type=float, default=45.0, help="Timeout por página (segundos)")
 
     parser.add_argument("--processor", help="URL completa del processor, ej: http://127.0.0.1:9000")
 
@@ -46,7 +44,7 @@ def parse_args():
         if u.port:
             args.proc_port = u.port
 
-    return parser.parse_args()
+    return args
 
 # ------------------------------
 # Comunicación con Servidor B (sockets TCP + framing JSON)
@@ -154,6 +152,115 @@ async def handle_scrape(request: web.Request):
         return web.json_response({"status": "failed", "error": "timeout"}, status=504)
     except Exception as e:
         return web.json_response({"status": "failed", "error": str(e)}, status=500)
+    
+async def _run_scrape_task(app: web.Application, task_id: str, url: str):
+    app["tasks"][task_id]["status"] = "scraping"
+    http_client: AsyncHTTPClient = app["http_client"]
+    proc_host: str = app["proc_host"]
+    proc_port: int = app["proc_port"]
+    proc_timeout: float = app["proc_timeout"]
+    page_timeout: float = app["request_timeout"]
+
+    try:
+        html, final_url = await http_client.fetch_html(url, timeout=page_timeout)
+
+        basic = parse_basic_structure(html, base_url=final_url)
+        meta = extract_meta_tags(html)
+        scraping_data = {
+            "title": basic["title"],
+            "links": basic["links"],
+            "meta_tags": meta,
+            "structure": basic["structure"],
+            "images_count": basic["images_count"],
+        }
+
+        app["tasks"][task_id]["status"] = "processing"
+        processing_request = {
+            "task": "full_processing",
+            "url": final_url,
+            "options": {
+                "screenshot": True,
+                "performance": True,
+                "image_thumbs": min(3, scraping_data["images_count"])
+            },
+        }
+
+        processing_data = None
+        try:
+            resp_b = await request_processing_b(proc_host, proc_port, processing_request, timeout=proc_timeout)
+            if isinstance(resp_b, dict) and resp_b.get("status") == "ok":
+                processing_data = {
+                    "screenshot": resp_b.get("screenshot_b64"),
+                    "performance": resp_b.get("performance"),
+                    "thumbnails": resp_b.get("thumbnails_b64", []),
+                }
+        except (asyncio.TimeoutError, ConnectionError, OSError):
+            processing_data = None
+
+        status = "success" if processing_data is not None else "partial"
+        result = {
+            "url": final_url,
+            "timestamp": utc_timestamp(),
+            "scraping_data": scraping_data,
+            "processing_data": processing_data,
+            "status": status,
+        }
+        app["tasks"][task_id]["result"] = result
+        app["tasks"][task_id]["status"] = "completed"
+
+    except asyncio.TimeoutError as e:
+        app["tasks"][task_id]["status"] = "failed"
+        app["tasks"][task_id]["error"] = "timeout"
+    except Exception as e:
+        app["tasks"][task_id]["status"] = "failed"
+        app["tasks"][task_id]["error"] = str(e)
+
+def _resolve_task_id(app, ident: str) -> str | None:
+    # primero probá como UUID
+    if ident in app["tasks"]:
+        return ident
+    # si no, probá como friendly
+    return app["friendly"].resolve_friendly(ident)
+
+async def handle_scrape_cola(request: web.Request):
+    """Crea una tarea asíncrona y devuelve task_id inmediatamente."""
+    app = request.app
+    url = request.query.get("url")
+    if not url:
+        return web.json_response({"error": "missing_url"}, status=400)
+
+    task_uuid = str(uuid.uuid4())
+    friendly = app["friendly"].next_for(url, task_uuid)
+
+    app["tasks"][task_uuid] = {"status": "pending", "result": None, "error": None}
+
+    # Lanzamos la tarea en background (no bloquea la respuesta HTTP)
+    asyncio.create_task(_run_scrape_task(app, task_uuid, url))
+    return web.json_response({"task_id": task_uuid, "friendly_id": friendly})
+
+async def handle_status(request: web.Request):
+    app = request.app
+    ident = request.match_info["task_id"]
+    task_id = _resolve_task_id(app, ident)
+    if not task_id:
+        return web.json_response({"error": "not_found"}, status=404)
+    t = app["tasks"][task_id]
+    friendly = app["friendly"].resolve_uuid(task_id)
+    return web.json_response({"id": ident, "task_id": task_id, "friendly_id": friendly, "status": t["status"]})
+
+async def handle_result(request: web.Request):
+    app = request.app
+    ident = request.match_info["task_id"]
+    task_id = _resolve_task_id(app, ident)
+    if not task_id:
+        return web.json_response({"error": "not_found"}, status=404)
+    t = app["tasks"][task_id]
+    if t["status"] != "completed":
+        return web.json_response({"error": "not_ready", "status": t["status"]}, status=409)
+    # opcional: inyectar el friendly_id en el payload final
+    payload = dict(t["result"])
+    payload["friendly_id"] = app["friendly"].resolve_uuid(task_id)
+    return web.json_response(payload)
 
 # ------------------------------
 # App Factory
@@ -171,12 +278,18 @@ async def app_factory(args) -> web.Application:
     app["proc_port"] = args.proc_port
     app["proc_timeout"] = args.proc_timeout
     app["request_timeout"] = args.request_timeout
+    app["tasks"] = {}  # task_id -> {"status": "...", "result": dict|None, "error": str|None}
+    app["friendly"] = FriendlyIdRegistry()
 
     app.router.add_get("/health", handle_health)
     app.router.add_get("/scrape", handle_scrape)
     app.router.add_get("/", lambda request: web.json_response(
     {"status": "ok", "endpoints": ["/health", "/scrape?url=<url>"]}
 ))
+    app.router.add_get("/scrape_cola", handle_scrape_cola)
+    app.router.add_get("/status/{task_id}", handle_status)
+    app.router.add_get("/result/{task_id}", handle_result)
+
 
 
     async def on_cleanup(app_):
